@@ -230,7 +230,7 @@
     "material": [ "wood", "cotton" ],
     "volume": "15 L",
     "price_postapoc": 50,
-    "pocket_data": [ { "pocket_type": "CONTAINER", "max_contains_volume": "15 L", "max_contains_weight": "60 kg", "moves": 300 } ],
+    "pocket_data": [ { "pocket_type": "CONTAINER", "rigid": true, "max_contains_volume": "15 L", "max_contains_weight": "60 kg", "moves": 300 } ],
     "covers": [ "TORSO" ],
     "coverage": 40,
     "encumbrance": 15,
