@@ -29,7 +29,7 @@ cd vcpkg
 .\vcpkg integrate install
 ```
 
-4. Install (or upgrade) neccessary packages with following command line:
+4. (Optionally) Install (or upgrade) necessary packages with following command line:
 
 #### install 64 bit dependencies:
 
@@ -61,11 +61,11 @@ git clone https://github.com/CleverRaven/Cataclysm-DDA.git
 cd Cataclysm-DDA
 ```
 
-2. Open the provided solution (`msvc-full-features\Cataclysm-vcpkg-static.sln`) in `Visual Studio`, select configuration (`Release` or `Debug`) and platform (`x64` or `x86`) and build it.
+2. Open the provided solution (`msvc-full-features\Cataclysm-vcpkg-static.sln`) in `Visual Studio`, select configuration (`Release` or `Debug`) and platform (`x64` or `x86`) and build it. All necessary dependencies will be built and cached for future use by vcpkg automatically.
 
 **Note**: This will compile release version with Sound, Tiles and Localization support (language files won't be automatically compiled).
 
-3. Building Cataclysm with Visual Studio is very simple. Just build it like a normal Visual C++ project. The process may takes a long period of time, so you'd better prepare a cup of coffee and some books in front of your computer :)
+3. Building Cataclysm with Visual Studio is very simple. Just build it like a normal Visual C++ project. The process may take a long period of time, so you'd better prepare a cup of coffee and some books in front of your computer :)
 
 4. If you need localization support, execute the bash script `lang/compile_mo.sh` inside Git Bash GUI just like on a UNIX-like system. This will compile the language files that were not automatically compiled in step 2 above.
 
@@ -73,7 +73,7 @@ Even if you do not need languages other than English, you may still want to exec
 
 ### Debugging
 
-Ensure that the Cataclysm project (`Cataclysm-vcpkg-static`) is the selected startup project, configure the working directory in the project settings to `$(ProjectDir)..`, and then press the debug button (or use the appropriate shortcut, e.g. F5).
+Ensure that the Cataclysm project (`Cataclysm-vcpkg-static`) is the selected startup project, configure the working directory in the project settings to `$(ProjectDir)..` (under Debugging section), and then press the debug button (or use the appropriate shortcut, e.g. F5).
 
 If you discover that after pressing the debug button in Visual Studio, Cataclysm just exits after launch with return code 1, that is because of the wrong working directory.
 
@@ -81,7 +81,10 @@ When debugging, it is not strictly necessary to use a `Debug` build; `Release` b
 
 ### Running unit tests
 
-Ensure that the Cataclysm test project (`Cataclysm-test-vcpkg-static`) is the selected startup project, configure the working directory in the project settings to `$(ProjectDir)..`, and then press the debug button (or use the appropriate shortcut, e.g. F5). This will run all of the unit tests. Additional command line arguments may be configured in the project's command line arguments setting, or if you are using a compatible unit test runner (e.g. Resharper) you can run or debug individual tests from the unit test sessions.
+Ensure that the Cataclysm test project (`Cataclysm-test-vcpkg-static`) is the selected startup project, configure the working directory in the project settings to `$(ProjectDir)..`, and then press the debug button (or use the appropriate shortcut, e.g. F5). This will run all of the unit tests.
+
+Additional command line arguments may be configured in the project's command line arguments setting, or if you are using a compatible unit test runner (e.g. Resharper) you can run or debug individual tests from the unit test sessions.
+You can also start the test runner library manually from windows console. Run it with `--help` for an overview of the arguments.
 
 ### Make a distribution
 

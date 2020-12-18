@@ -1,19 +1,20 @@
-#include "game.h" // IWYU pragma: associated
-
-#include <cstdlib>
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 #include "avatar.h"
+#include "debug.h"
+#include "game.h" // IWYU pragma: associated
 #include "map.h"
 #include "messages.h"
-#include "sounds.h"
-#include "vehicle.h"
-#include "vpart_position.h"
-#include "debug.h"
 #include "rng.h"
+#include "sounds.h"
 #include "tileray.h"
 #include "translations.h"
 #include "units.h"
+#include "units_fwd.h"
+#include "vehicle.h"
+#include "vpart_position.h"
 
 static const efftype_id effect_harnessed( "harnessed" );
 
@@ -27,7 +28,7 @@ bool game::grabbed_veh_move( const tripoint &dp )
     }
     vehicle *grabbed_vehicle = &grabbed_vehicle_vp->vehicle();
     if( !grabbed_vehicle ||
-        !grabbed_vehicle->handle_potential_theft( dynamic_cast<player &>( g->u ) ) ) {
+        !grabbed_vehicle->handle_potential_theft( get_avatar() ) ) {
         return false;
     }
     const int grabbed_part = grabbed_vehicle_vp->part_index();
@@ -185,7 +186,10 @@ bool game::grabbed_veh_move( const tripoint &dp )
 
     m.displace_vehicle( *grabbed_vehicle, final_dp_veh );
 
-    if( !grabbed_vehicle ) {
+    if( grabbed_vehicle ) {
+        m.level_vehicle( *grabbed_vehicle );
+        grabbed_vehicle->check_falling_or_floating();
+    } else {
         debugmsg( "Grabbed vehicle disappeared" );
         return false;
     }

@@ -8,14 +8,13 @@
 #include <string>
 #include <utility>
 
-#include "avatar.h"
 #include "cata_utility.h"
+#include "character.h"
 #include "color.h"
 #include "compatibility.h"
 #include "cursesdef.h"
 #include "debug.h"
 #include "filesystem.h"
-#include "game.h"
 #include "input.h"
 #include "json.h"
 #include "monstergenerator.h"
@@ -101,6 +100,8 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
     bool changes_made = false;
     input_context ctxt( "SAFEMODE" );
     ctxt.register_cardinal();
+    ctxt.register_action( "PAGE_UP", to_translation( "Fast scroll up" ) );
+    ctxt.register_action( "PAGE_DOWN", to_translation( "Fast scroll down" ) );
     ctxt.register_action( "CONFIRM" );
     ctxt.register_action( "QUIT" );
     ctxt.register_action( "NEXT_TAB" );
@@ -121,6 +122,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
         ctxt.register_action( "SWAP_RULE_GLOBAL_CHAR" );
     }
 
+    Character &player_character = get_player_character();
     ui.on_redraw( [&]( const ui_adaptor & ) {
         draw_border( w_border, BORDER_COLOR, custom_name_in );
 
@@ -143,7 +145,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
         };
 
         int tmpx = 0;
-        for( auto &hotkey : hotkeys ) {
+        for( const std::string &hotkey : hotkeys ) {
             tmpx += shortcut_print( w_header, point( tmpx, 0 ), c_white, c_light_green, _( hotkey ) ) + 2;
         }
 
@@ -201,7 +203,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
 
         auto &current_tab = ( tab == GLOBAL_TAB ) ? global_rules : character_rules;
 
-        if( tab == CHARACTER_TAB && g->u.name.empty() ) {
+        if( tab == CHARACTER_TAB && player_character.name.empty() ) {
             character_rules.clear();
             mvwprintz( w, point( 15, 8 ), c_white, _( "Please load a character first to use this page!" ) );
         } else if( empty() ) {
@@ -220,7 +222,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
             if( i >= start_pos &&
                 i < start_pos + std::min( content_height, static_cast<int>( current_tab.size() ) ) ) {
 
-                auto rule = current_tab[i];
+                safemode::rules_class rule = current_tab[i];
 
                 nc_color line_color = ( rule.active ) ? c_white : c_light_gray;
 
@@ -254,6 +256,8 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
         ui_manager::redraw();
 
         const std::string action = ctxt.handle_input();
+        const int recmax = static_cast<int>( current_tab.size() );
+        const int scroll_rate = recmax > 20 ? 10 : 3;
 
         if( action == "NEXT_TAB" ) {
             tab++;
@@ -269,17 +273,33 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
             }
         } else if( action == "QUIT" ) {
             break;
-        } else if( tab == CHARACTER_TAB && g->u.name.empty() ) {
+        } else if( tab == CHARACTER_TAB && player_character.name.empty() ) {
             //Only allow loaded games to use the char sheet
         } else if( action == "DOWN" ) {
             line++;
-            if( line >= static_cast<int>( current_tab.size() ) ) {
+            if( line >= recmax ) {
                 line = 0;
             }
         } else if( action == "UP" ) {
             line--;
             if( line < 0 ) {
-                line = current_tab.size() - 1;
+                line = recmax - 1;
+            }
+        } else if( action == "PAGE_DOWN" ) {
+            if( line == recmax - 1 ) {
+                line = 0;
+            } else if( line + scroll_rate >= recmax ) {
+                line = recmax - 1;
+            } else {
+                line += +scroll_rate;
+            }
+        } else if( action == "PAGE_UP" ) {
+            if( line == 0 ) {
+                line = recmax - 1;
+            } else if( line <= scroll_rate ) {
+                line = 0;
+            } else {
+                line += -scroll_rate;
             }
         } else if( action == "ADD_DEFAULT_RULESET" ) {
             changes_made = true;
@@ -308,7 +328,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
             current_tab.push_back( current_tab[line] );
             line = current_tab.size() - 1;
         } else if( action == "SWAP_RULE_GLOBAL_CHAR" && !current_tab.empty() ) {
-            if( ( tab == GLOBAL_TAB && !g->u.name.empty() ) || tab == CHARACTER_TAB ) {
+            if( ( tab == GLOBAL_TAB && !player_character.name.empty() ) || tab == CHARACTER_TAB ) {
                 changes_made = true;
                 //copy over
                 auto &temp_rules_from = ( tab == GLOBAL_TAB ) ? global_rules : character_rules;
@@ -417,7 +437,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
                     current_tab[line].proximity = get_option<int>( "SAFEMODEPROXIMITY" );
                 } else {
                     //Let the options class handle the validity of the new value
-                    auto temp_option = get_options().get_option( "SAFEMODEPROXIMITY" );
+                    options_manager::cOpt temp_option = get_options().get_option( "SAFEMODEPROXIMITY" );
                     temp_option.setValue( text );
                     current_tab[line].proximity = atoi( temp_option.getValue().c_str() );
                 }
@@ -467,7 +487,7 @@ void safemode::show( const std::string &custom_name_in, bool is_safemode_in )
     if( query_yn( _( "Save changes?" ) ) ) {
         if( is_safemode_in ) {
             save_global();
-            if( !g->u.name.empty() ) {
+            if( !player_character.name.empty() ) {
                 save_character();
             }
         } else {
@@ -489,7 +509,8 @@ void safemode::test_pattern( const int tab_in, const int row_in )
         return;
     }
 
-    if( g->u.name.empty() ) {
+    Character &player_character = get_player_character();
+    if( player_character.name.empty() ) {
         popup( _( "No monsters loaded.  Please start a game first." ) );
         return;
     }
@@ -537,6 +558,8 @@ void safemode::test_pattern( const int tab_in, const int row_in )
 
     input_context ctxt( "SAFEMODE_TEST" );
     ctxt.register_updown();
+    ctxt.register_action( "PAGE_UP", to_translation( "Fast scroll up" ) );
+    ctxt.register_action( "PAGE_DOWN", to_translation( "Fast scroll down" ) );
     ctxt.register_action( "QUIT" );
     ctxt.register_action( "HELP_KEYBINDINGS" );
 
@@ -578,16 +601,34 @@ void safemode::test_pattern( const int tab_in, const int row_in )
     while( true ) {
         ui_manager::redraw();
 
+        const int recmax = static_cast<int>( creature_list.size() );
+        const int scroll_rate = recmax > 20 ? 10 : 3;
         const std::string action = ctxt.handle_input();
         if( action == "DOWN" ) {
             line++;
-            if( line >= static_cast<int>( creature_list.size() ) ) {
+            if( line >= recmax ) {
                 line = 0;
             }
         } else if( action == "UP" ) {
             line--;
             if( line < 0 ) {
-                line = creature_list.size() - 1;
+                line = recmax - 1;
+            }
+        } else if( action == "PAGE_DOWN" ) {
+            if( line == recmax - 1 ) {
+                line = 0;
+            } else if( line + scroll_rate >= recmax ) {
+                line = recmax - 1;
+            } else {
+                line += +scroll_rate;
+            }
+        } else if( action == "PAGE_UP" ) {
+            if( line == 0 ) {
+                line = recmax - 1;
+            } else if( line <= scroll_rate ) {
+                line = 0;
+            } else {
+                line += -scroll_rate;
             }
         } else if( action == "QUIT" ) {
             break;
@@ -654,7 +695,7 @@ void safemode::add_rules( const std::vector<rules_class> &rules_in )
 {
     //if a specific monster is being added, all the rules need to be checked now
     //may have some performance issues since exclusion needs to check all monsters also
-    for( auto &rule : rules_in ) {
+    for( const rules_class &rule : rules_in ) {
         switch( rule.category ) {
             case Categories::HOSTILE_SPOTTED:
                 if( !rule.whitelist ) {
@@ -761,8 +802,8 @@ bool safemode::save( const bool is_character_in )
     auto file = PATH_INFO::safemode();
 
     if( is_character ) {
-        file = g->get_player_base_save_path() + ".sfm.json";
-        if( !file_exist( g->get_player_base_save_path() + ".sav" ) ) {
+        file = PATH_INFO::player_base_save_path() + ".sfm.json";
+        if( !file_exist( PATH_INFO::player_base_save_path() + ".sav" ) ) {
             return true; //Character not saved yet.
         }
     }
@@ -794,7 +835,7 @@ void safemode::load( const bool is_character_in )
     std::ifstream fin;
     std::string file = PATH_INFO::safemode();
     if( is_character ) {
-        file = g->get_player_base_save_path() + ".sfm.json";
+        file = PATH_INFO::player_base_save_path() + ".sfm.json";
     }
 
     fin.open( file.c_str(), std::ifstream::in | std::ifstream::binary );
@@ -816,8 +857,8 @@ void safemode::serialize( JsonOut &json ) const
 {
     json.start_array();
 
-    auto &temp_rules = ( is_character ) ? character_rules : global_rules;
-    for( auto &elem : temp_rules ) {
+    const std::vector<rules_class> &temp_rules = is_character ? character_rules : global_rules;
+    for( const rules_class &elem : temp_rules ) {
         json.start_object();
 
         json.member( "rule", elem.rule );

@@ -15,7 +15,7 @@
     "name": { "str": ".50 BMG M33 Ball" },
     "description": ".50 BMG ammunition with mild steel cored 661gr FMJ bullets.  The .50 BMG is a very powerful rifle round designed for anti-aircraft use, later adapted to anti-vehicular and anti-personnel roles.  Its stupendous energy and armor piercing capabilities make it one of the most deadly rounds available, offset only by its drastic recoil and noise.",
     "weight": "114 g",
-    "volume": "250 ml",
+    "volume": "451 ml",
     "price": 2200,
     "price_postapoc": 2500,
     "flags": [ "IRREPLACEABLE_CONSUMABLE" ],
@@ -94,6 +94,48 @@
     "description": "Variant of the .50 BMG round that uses a core hardened steel.  Penetration is increased, but damage is reduced.  This one has been hand-reloaded.",
     "proportional": { "price": 0.7, "damage": { "damage_type": "bullet", "amount": 0.9 }, "dispersion": 1.1 },
     "extend": { "effects": [ "RECYCLED" ] },
+    "delete": { "effects": [ "NEVER_MISFIRES" ], "flags": [ "IRREPLACEABLE_CONSUMABLE" ] }
+  },
+  {
+    "id": "bp_50_incendiary",
+    "copy-from": "50_incendiary",
+    "type": "AMMO",
+    "name": { "str": ".50 BMG tracer, black powder" },
+    "proportional": {
+      "price": 0.3,
+      "damage": { "damage_type": "bullet", "amount": 0.76, "armor_penetration": 0.5 },
+      "recoil": 0.76,
+      "dispersion": 1.2
+    },
+    "extend": { "effects": [ "RECYCLED", "BLACKPOWDER", "MUZZLE_SMOKE" ] },
+    "delete": { "effects": [ "NEVER_MISFIRES" ], "flags": [ "IRREPLACEABLE_CONSUMABLE" ] }
+  },
+  {
+    "id": "bp_50match",
+    "copy-from": "50match",
+    "type": "AMMO",
+    "name": { "str": ".50 BMG Match, black powder" },
+    "proportional": {
+      "price": 0.3,
+      "damage": { "damage_type": "bullet", "amount": 0.76, "armor_penetration": 0.5 },
+      "recoil": 0.76,
+      "dispersion": 1.2
+    },
+    "extend": { "effects": [ "RECYCLED", "BLACKPOWDER", "MUZZLE_SMOKE" ] },
+    "delete": { "effects": [ "NEVER_MISFIRES" ], "flags": [ "IRREPLACEABLE_CONSUMABLE" ] }
+  },
+  {
+    "id": "bp_50ss",
+    "copy-from": "50ss",
+    "type": "AMMO",
+    "name": { "str": ".50 BMG AP, black powder" },
+    "proportional": {
+      "price": 0.3,
+      "damage": { "damage_type": "bullet", "amount": 0.76, "armor_penetration": 0.5 },
+      "recoil": 0.76,
+      "dispersion": 1.2
+    },
+    "extend": { "effects": [ "RECYCLED", "BLACKPOWDER", "MUZZLE_SMOKE" ] },
     "delete": { "effects": [ "NEVER_MISFIRES" ], "flags": [ "IRREPLACEABLE_CONSUMABLE" ] }
   }
 ]
